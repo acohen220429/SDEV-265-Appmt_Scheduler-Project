@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-class Appointment(models.model):
+class Appointment(models.Model):
     client = models.ForeignKey(User, on_delete=models.CASCADE)
     #//service can be Nails, Hair
     service = models.CharField(max_length=30, default = "Acne Treatment")
