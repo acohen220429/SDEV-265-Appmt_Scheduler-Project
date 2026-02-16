@@ -3,6 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect, render
 from .forms import SimpleRegisterForm
+from .models import Appointment
 
 def home(request):
     return render(request, "scheduler/home.html")
@@ -49,3 +50,8 @@ def logout_page(request):
         logout(request)
         messages.success(request, "You have been logged out.")
     return redirect("home")
+
+@login_required
+def schedule_appointment(request):
+    appointments = Appointment.objects.filter(client=request.user).order_by('date', 'starttime')
+    return render(request, "scheduler/schedule_appointment.html", {"appointments": appointments})

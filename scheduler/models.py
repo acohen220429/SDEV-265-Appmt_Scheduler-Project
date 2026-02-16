@@ -9,9 +9,10 @@ class Appointment(models.Model):
     date = models.DateField()
     starttime = models.TimeField()
     endtime = models.TimeField()
-    creation_date = models.DateTimeField(auto_now_add=True)
-    creation_time = models.DateTimeField(auto_now_add=True)
+    creation_DT = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True)
+
+    #This is for au
 
     def __str__(self):
         return f"{self.client.username} - {self.service} on {self.date} from {self.starttime} to {self.endtime}"    

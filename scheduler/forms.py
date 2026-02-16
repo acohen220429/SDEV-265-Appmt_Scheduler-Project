@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from .models import Appointment
 
 
 class SimpleRegisterForm(forms.Form):
@@ -16,3 +17,8 @@ class SimpleRegisterForm(forms.Form):
         username = self.cleaned_data["username"]
         password = self.cleaned_data["password"]
         return User.objects.create_user(username=username, password=password)
+
+class AppointmentForm(forms.ModelForm):
+    class Meta:
+        model = Appointment
+        fields = ['service', 'date', 'starttime', 'notes']
