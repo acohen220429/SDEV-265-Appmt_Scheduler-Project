@@ -2,9 +2,18 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
 from .forms import SimpleRegisterForm
 from .models import Appointment
 
+#This is our dictionary for service minutes
+SERVICE_MINUTES = {
+    "Extraction": 30,
+    "Spray Tan": 45,
+    "Hair Removal": 60,
+    "Chemical Peel": 30,
+    "Acne Treatment": 45,
+}
 def home(request):
     return render(request, "scheduler/home.html")
 
@@ -51,7 +60,55 @@ def logout_page(request):
         messages.success(request, "You have been logged out.")
     return redirect("home")
 
+
+#shows appointments
 @login_required
 def schedule_appointment(request):
     appointments = Appointment.objects.filter(client=request.user).order_by('date', 'starttime')
     return render(request, "scheduler/schedule_appointment.html", {"appointments": appointments})
+
+@login_required
+def create_appointment(request):
+    if request.method == 'POST':
+        form = AppointmentForm(request.POST)
+        if form.is_valid():
+            appmt = form.save(commit=False)
+            appmt.client = request.user
+        #/ This code then calculates end time based on 
+        #/ the service duration from the minutes dictionary
+        
+
+        service_minutes = SERVICE_MINUTES.get(appmt.service, 30)  # default to 30 minutes if service not found
+        #formatted as a single object for easier use
+        start_datetime = datetime.combine(appmt.date, appmt.starttime)
+        #It then calculates how long the appointment will take
+        appmt.endtime = (start_datetime + timedelta(minutes=service_minutes)).time()
+
+        #Below will be the validation for appointment overlap
+        #and 24 hr advance booking
+
+        overlapTest = False
+        
+
+        exisiting_appointments = Appointment.objects.filter(date=appmt.date)
+        for existing in exisiting_appointments:
+            if (appmt.starttime < existing.endtime and appmt.endtime > existing.starttime):
+            overlapTest = True
+                break
+
+
+        advanceCheck = start_datetime < datetime.now() + timedelta(hours = 24)
+    
+        if overlapTest:
+            messages.error(request, "This appointment overlaps with an existing appointment. Please choose a different time.")
+        elif advanceCheck:
+            messages.error(request, "Appointments must be booked at least 24 hours in advance.")
+        else:
+            appmt.save()
+            messages.success(request, "Your appointment has been scheduled.")
+            return redirect("schedule_appointment")
+    else:
+        form = AppointmentForm()
+
+
+

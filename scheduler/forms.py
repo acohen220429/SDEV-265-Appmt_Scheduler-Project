@@ -18,7 +18,9 @@ class SimpleRegisterForm(forms.Form):
         password = self.cleaned_data["password"]
         return User.objects.create_user(username=username, password=password)
 
+
 class AppointmentForm(forms.ModelForm):
     class Meta:
         model = Appointment
+        #Fields are all variables user inputs themselves
         fields = ['service', 'date', 'starttime', 'notes']
