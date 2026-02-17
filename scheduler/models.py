@@ -8,7 +8,8 @@ class Appointment(models.Model):
     date = models.DateField()
     starttime = models.TimeField()
     endtime = models.TimeField()
-    creation_DT = models.DateTimeField(auto_now_add=True)
+    creation_date = models.DateTimeField(auto_now_add=True)
+    creation_time = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):

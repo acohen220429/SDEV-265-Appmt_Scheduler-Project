@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Appointments</title>
+</head>
+
+<body>
+    <h1>My Appointments</h1>
+
+    {% if appointments %}
+    <ul>
+        {% for appt in appointments %}
+        <li>
+            {{ appt.date }} | {{ appt.starttime }} - {{ appt.endtime }} | {{ appt.service }}
+            {% if appt.notes %}
+            | Notes: {{ appt.notes }}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No appointments scheduled yet.</p>
+    {% endif %}
+
+    <p><a href="{% url 'create_appointment' %}">Create Another Appointment</a></p>
+    <p><a href="{% url 'home' %}">Back to Home</a></p>
+</body>
+
+</html>
