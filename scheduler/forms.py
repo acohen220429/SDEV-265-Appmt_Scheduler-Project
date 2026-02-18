@@ -2,6 +2,14 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import Appointment
 
+SERVICE_CHOICES = [
+    ("Extraction", "Extraction"),
+    ("Spray Tan", "Spray Tan"),
+    ("Hair Removal", "Hair Removal"),
+    ("Chemical Peel", "Chemical Peel"),
+    ("Acne Treatment", "Acne Treatment"),
+]
+
 
 class SimpleRegisterForm(forms.Form):
     username = forms.CharField(max_length=150)
@@ -20,7 +28,16 @@ class SimpleRegisterForm(forms.Form):
 
 
 class AppointmentForm(forms.ModelForm):
+    service = forms.ChoiceField(choices=SERVICE_CHOICES)
+    starttime = forms.TimeField(
+        label="Start time",
+        widget=forms.TimeInput(attrs={"type": "time"}),
+    )
+
     class Meta:
         model = Appointment
         #Fields are all variables user inputs themselves
         fields = ['service', 'date', 'starttime', 'notes']
+        widgets = {
+            "date": forms.DateInput(attrs={"type": "date"}),
+        }
