@@ -23,5 +23,7 @@ urlpatterns = [
     path('login/', views.login_page, name='login'),
     path('register/', views.register_page, name='register'),
     path('logout/', views.logout_page, name='logout'),
+    path('appointments/', views.schedule_appointment, name='schedule_appointment'),
+    path('appointments/create/', views.create_appointment, name='create_appointment'),
     path('admin/', admin.site.urls),
 ]

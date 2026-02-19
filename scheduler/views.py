@@ -3,7 +3,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
-from .forms import SimpleRegisterForm
+from datetime import datetime, timedelta
+from .forms import SimpleRegisterForm, AppointmentForm
 from .models import Appointment
 from datetime import datetime, timedelta, time # for time and day validation
 
@@ -135,9 +136,12 @@ def create_appointment(request):
                 appmt.save()
                 messages.success(request, "Your appointment has been scheduled.")
                 return redirect("schedule_appointment")
-
+        else:
+            messages.error(request, "Please fix the form errors below.")
     else:
         form = AppointmentForm()
+
+    return render(request, "scheduler/create_appointment.html", {"form": form})
 
 
 
