@@ -95,19 +95,19 @@ def create_appointment(request):
             appmt.endtime = (start_datetime + timedelta(minutes=service_minutes)).time()
 
             #Below is valid days of operation checking
-            validDayTest = True
-            validHourTest = True
+            validDayTest = False
+            validHourTest = False
         
             if appmt.date.weekday() not in open_days:
                 messages.error(request, "Our business is only open Monday - Friday from 9:00 AM to 5:00 PM.")
-                validDayTest = False
+                validDayTest = True
                 return render(request, "scheduler/create_appointment.html", {"form": form})
 
 
             #Below is valid hours checking
             if appmt.starttime < open_time or appmt.endtime >= close_time:
                 messages.error(request, "Appointments must be scheduled during business hours (9:00 AM to 5:00 PM).")
-                validHourTest = False
+                validHourTest = True
                 return render(request, "scheduler/create_appointment.html", {"form": form})
 
 
@@ -120,7 +120,7 @@ def create_appointment(request):
             exisiting_appointments = Appointment.objects.filter(date=appmt.date)
             for existing in exisiting_appointments:
                 if (appmt.starttime < existing.endtime and appmt.endtime > existing.starttime):
-                overlapTest = True
+                    overlapTest = True
                     break
 
 
@@ -130,8 +130,6 @@ def create_appointment(request):
                 messages.error(request, "This appointment overlaps with an existing appointment. Please choose a different time.")
             elif advanceCheck:
                 messages.error(request, "Appointments must be booked at least 24 hours in advance.")
-            elif validDayTest and validHourTest:
-                messages.error(request, "Invalid Appointment Slot. Business Hours are 9:00 AM to 5:00 PM, Mon-Fri.")
             else:
                 appmt.save()
                 messages.success(request, "Your appointment has been scheduled.")
