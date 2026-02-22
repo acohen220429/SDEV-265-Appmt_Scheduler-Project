@@ -71,7 +71,7 @@ def logout_page(request):
     return redirect("home")
 
 
-#shows appointments
+#TEMPLATE shows appointments 
 @login_required
 def schedule_appointment(request):
     appointments = Appointment.objects.filter(client=request.user).order_by('date', 'starttime')
@@ -141,5 +141,14 @@ def create_appointment(request):
 
     return render(request, "scheduler/create_appointment.html", {"form": form})
 
-
-
+#Deleting an appointment
+@login_required
+def delete_appointment(request, appointment_id):
+    if request.method == 'POST':
+        try:
+            appointment = Appointment.objects.get(id=appointment_id, client=request.user)
+            appointment.delete()
+            messages.success(request, "Your appointment has been deleted.")
+        except Appointment.DoesNotExist:
+            messages.error(request, "Appointment not found.")
+    return redirect("schedule_appointment")
