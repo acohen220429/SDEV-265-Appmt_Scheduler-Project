@@ -19,6 +19,9 @@
 
     {% if user.is_authenticated %}
     <p>You are logged in as {{ user.username }}.</p>
+    <form method="get" action="{% url 'schedule_appointment' %}">
+        <button type="submit">View My Appointments</button>
+    </form>
     <form method="get" action="{% url 'create_appointment' %}">
         <button type="submit">Schedule Appointment</button>
     </form>

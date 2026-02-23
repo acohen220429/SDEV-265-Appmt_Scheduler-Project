@@ -3,10 +3,9 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from .forms import SimpleRegisterForm, AppointmentForm
 from .models import Appointment
-from datetime import datetime, timedelta, time # for time and day validation
 
 #This is our dictionary for service minutes
 SERVICE_MINUTES = {
@@ -23,6 +22,7 @@ close_time = time(17, 0)
 
 #Only open on weekdays, no weekends
 open_days = [0, 1, 2, 3, 4]
+
 
 def home(request):
     return render(request, "scheduler/home.html")
@@ -140,6 +140,57 @@ def create_appointment(request):
         form = AppointmentForm()
 
     return render(request, "scheduler/create_appointment.html", {"form": form})
+
+#Editing an appointment
+@login_required
+def edit_appointment(request, appointment_id):
+    try:
+        appointment = Appointment.objects.get(id=appointment_id, client=request.user)
+    except Appointment.DoesNotExist:
+        messages.error(request, "Appointment not found.")
+        return redirect("schedule_appointment")
+
+    if request.method == "POST":
+        form = AppointmentForm(request.POST, instance=appointment)
+        if form.is_valid():
+            appmt = form.save(commit=False)
+            appmt.client = request.user
+
+            service_minutes = SERVICE_MINUTES.get(appmt.service, 30)
+            start_datetime = datetime.combine(appmt.date, appmt.starttime)
+            appmt.endtime = (start_datetime + timedelta(minutes=service_minutes)).time()
+
+            if appmt.date.weekday() not in open_days:
+                messages.error(request, "Our business is only open Monday - Friday from 9:00 AM to 5:00 PM.")
+                return render(request, "scheduler/edit_appointment.html", {"form": form, "appointment": appointment})
+
+            if appmt.starttime < open_time or appmt.endtime >= close_time:
+                messages.error(request, "Appointments must be scheduled during business hours (9:00 AM to 5:00 PM).")
+                return render(request, "scheduler/edit_appointment.html", {"form": form, "appointment": appointment})
+
+            overlap_test = False
+            existing_appointments = Appointment.objects.filter(date=appmt.date).exclude(id=appointment.id)
+            for existing in existing_appointments:
+                if appmt.starttime < existing.endtime and appmt.endtime > existing.starttime:
+                    overlap_test = True
+                    break
+
+            advance_check = start_datetime < datetime.now() + timedelta(hours=24)
+
+            if overlap_test:
+                messages.error(request, "This appointment overlaps with an existing appointment. Please choose a different time.")
+            elif advance_check:
+                messages.error(request, "Appointments must be booked at least 24 hours in advance.")
+            else:
+                appmt.save()
+                messages.success(request, "Your appointment has been updated.")
+                return redirect("schedule_appointment")
+        else:
+            messages.error(request, "Please fix the form errors below.")
+    else:
+        form = AppointmentForm(instance=appointment)
+
+    return render(request, "scheduler/edit_appointment.html", {"form": form, "appointment": appointment})
 
 #Deleting an appointment
 @login_required
