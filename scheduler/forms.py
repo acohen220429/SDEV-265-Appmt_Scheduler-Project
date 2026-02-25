@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from datetime import datetime
 from .models import Appointment
 
 SERVICE_CHOICES = [
@@ -8,6 +9,15 @@ SERVICE_CHOICES = [
     ("Hair Removal", "Hair Removal"),
     ("Chemical Peel", "Chemical Peel"),
     ("Acne Treatment", "Acne Treatment"),
+]
+
+OPEN_HOUR = 9
+CLOSE_HOUR = 17
+
+TIME_CHOICES = [
+    (f"{hour:02d}:{minute:02d}", datetime.strptime(f"{hour:02d}:{minute:02d}", "%H:%M").strftime("%I:%M %p"))
+    for hour in range(OPEN_HOUR, CLOSE_HOUR)
+    for minute in (0, 15, 30, 45)
 ]
 
 
@@ -29,9 +39,9 @@ class SimpleRegisterForm(forms.Form):
 
 class AppointmentForm(forms.ModelForm):
     service = forms.ChoiceField(choices=SERVICE_CHOICES)
-    starttime = forms.TimeField(
+    starttime = forms.ChoiceField(
         label="Start time",
-        widget=forms.TimeInput(attrs={"type": "time"}),
+        choices=TIME_CHOICES,
     )
 
     class Meta:
@@ -41,3 +51,13 @@ class AppointmentForm(forms.ModelForm):
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        starttime = self.initial.get("starttime")
+        if starttime:
+            self.initial["starttime"] = starttime.strftime("%H:%M")
+
+    def clean_starttime(self):
+        starttime_value = self.cleaned_data["starttime"]
+        return datetime.strptime(starttime_value, "%H:%M").time()
