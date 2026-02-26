@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from datetime import datetime, timedelta, time
@@ -22,6 +23,69 @@ close_time = time(17, 0)
 
 #Only open on weekdays, no weekends
 open_days = [0, 1, 2, 3, 4]
+
+
+def _format_time_label(time_value):
+    return datetime.strptime(time_value, "%H:%M").strftime("%I:%M %p")
+
+
+def get_available_time_slots(date_value, service_name, exclude_appointment_id=None):
+    service_minutes = SERVICE_MINUTES.get(service_name, 30)
+    existing_appointments = Appointment.objects.filter(date=date_value)
+
+    if exclude_appointment_id:
+        existing_appointments = existing_appointments.exclude(id=exclude_appointment_id)
+
+    slots = []
+    current = datetime.combine(date_value, open_time)
+
+    while current.time() < close_time:
+        end_datetime = current + timedelta(minutes=service_minutes)
+        start_time = current.time()
+        end_time = end_datetime.time()
+
+        if end_time >= close_time:
+            current += timedelta(minutes=15)
+            continue
+
+        overlaps = any(
+            start_time < existing.endtime and end_time > existing.starttime
+            for existing in existing_appointments
+        )
+
+        if not overlaps:
+            slot_value = start_time.strftime("%H:%M")
+            slots.append({"value": slot_value, "label": _format_time_label(slot_value)})
+
+        current += timedelta(minutes=15)
+
+    return slots
+
+
+@login_required
+def available_times(request):
+    date_string = request.GET.get("date")
+    service_name = request.GET.get("service")
+    exclude_id = request.GET.get("exclude_id")
+
+    if not date_string or not service_name:
+        return JsonResponse({"times": []})
+
+    try:
+        selected_date = datetime.strptime(date_string, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"times": []})
+
+    if selected_date.weekday() not in open_days:
+        return JsonResponse({"times": []})
+
+    try:
+        exclude_id = int(exclude_id) if exclude_id else None
+    except ValueError:
+        exclude_id = None
+
+    slots = get_available_time_slots(selected_date, service_name, exclude_id)
+    return JsonResponse({"times": slots})
 
 
 def home(request):

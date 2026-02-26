@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Appointment</title>
+    <link rel="stylesheet" href="{% static 'scheduler/style.css' %}">
 </head>
 
 <body>
@@ -21,11 +23,76 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Schedule</button>
+        <button type="submit" class="header-btn">Schedule</button>
     </form>
 
     <p><a href="{% url 'schedule_appointment' %}">View My Appointments</a></p>
     <p><a href="{% url 'home' %}">Back to Home</a></p>
+
+    <script>
+        (function () {
+            const dateInput = document.getElementById("id_date");
+            const serviceSelect = document.getElementById("id_service");
+            const startTimeSelect = document.getElementById("id_starttime");
+            const endpoint = "{% url 'available_times' %}";
+
+            if (!dateInput || !serviceSelect || !startTimeSelect) {
+                return;
+            }
+
+            function setOptions(times, previousValue) {
+                startTimeSelect.innerHTML = "";
+
+                if (!times.length) {
+                    const option = document.createElement("option");
+                    option.value = "";
+                    option.textContent = "No available times";
+                    startTimeSelect.appendChild(option);
+                    startTimeSelect.disabled = true;
+                    return;
+                }
+
+                startTimeSelect.disabled = false;
+
+                times.forEach(function (slot) {
+                    const option = document.createElement("option");
+                    option.value = slot.value;
+                    option.textContent = slot.label;
+                    startTimeSelect.appendChild(option);
+                });
+
+                const stillAvailable = times.some(function (slot) {
+                    return slot.value === previousValue;
+                });
+
+                startTimeSelect.value = stillAvailable ? previousValue : times[0].value;
+            }
+
+            function refreshTimes() {
+                const dateValue = dateInput.value;
+                const serviceValue = serviceSelect.value;
+                const previousValue = startTimeSelect.value;
+
+                if (!dateValue || !serviceValue) {
+                    return;
+                }
+
+                const params = new URLSearchParams({
+                    date: dateValue,
+                    service: serviceValue
+                });
+
+                fetch(endpoint + "?" + params.toString())
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) { setOptions(data.times || [], previousValue); })
+                    .catch(function () { setOptions([], previousValue); });
+            }
+
+            dateInput.addEventListener("change", refreshTimes);
+            serviceSelect.addEventListener("change", refreshTimes);
+            refreshTimes();
+        })();
+    </script>
 </body>
 
 </html>

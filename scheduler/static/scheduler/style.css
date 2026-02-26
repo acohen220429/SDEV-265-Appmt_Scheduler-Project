@@ -1,0 +1,370 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --primary: #4f46e5;
+    --primary-dark: #3730a3;
+    --primary-light: #e0e7ff;
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+    --success: #16a34a;
+    --success-light: #dcfce7;
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    --transition: 0.18s ease;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1rem 4rem;
+    line-height: 1.6;
+}
+
+body>h1,
+body>ul,
+body>p,
+body>form,
+body>table {
+    width: 100%;
+    max-width: 520px;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    height: 220px;
+    z-index: -1;
+}
+
+body {
+    padding-top: 3.5rem;
+}
+
+/* Page card */
+body>* {
+    position: relative;
+}
+
+h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+ul:has(> li):not(.appt-list) {
+    list-style: none;
+    max-width: 520px;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+ul:has(> li):not(.appt-list) li {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    background: var(--warning-light);
+    border-left: 4px solid var(--warning);
+    color: var(--warning);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+form:not([style]) {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 1.25rem;
+}
+
+form p {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.1rem;
+}
+
+form p label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
+}
+
+form p input,
+form p select,
+form p textarea {
+    padding: 0.6rem 0.85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.97rem;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none;
+    width: 100%;
+}
+
+form p input:focus,
+form p select:focus,
+form p textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+    background: #fff;
+}
+
+form p textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+form p .helptext,
+form p span.helptext {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+form p ul.errorlist {
+    list-style: none;
+    margin-top: 0.25rem;
+}
+
+form p ul.errorlist li {
+    font-size: 0.82rem;
+    color: var(--danger);
+    background: var(--danger-light);
+    border-left: 3px solid var(--danger);
+    padding: 0.35rem 0.6rem;
+    border-radius: 4px;
+}
+
+button[type="submit"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1.4rem;
+    border: none;
+    border-radius: 7px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+form:not([style]) button[type="submit"] {
+    background: var(--primary);
+    color: #fff;
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+}
+
+form:not([style]) button[type="submit"]:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+}
+
+form:not([style]) button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+/* Keep create/edit submit actions aligned with the header color. */
+form:not([style]) button[type="submit"].header-btn {
+    background: #4f46e5;
+    color: #fff;
+    border: none;
+}
+
+form:not([style]) button[type="submit"].header-btn:hover {
+    background: #3730a3;
+    color: #fff;
+}
+
+body>form[method="get"] button,
+body>form[method="post"] button {
+    background: var(--primary);
+    color: #fff;
+    width: 100%;
+    max-width: 520px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    margin-bottom: 0.6rem;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    border-radius: var(--radius);
+}
+
+body>form[method="get"] button:hover,
+body>form[method="post"] button:hover {
+    background: var(--primary-dark);
+}
+
+body>form[method="post"] button[type="submit"] {
+    background: #f1f5f9;
+    color: var(--text-muted);
+    box-shadow: none;
+    border: 1.5px solid var(--border);
+}
+
+body>form[method="post"] button[type="submit"]:hover {
+    background: var(--danger-light);
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+ul.appt-list,
+body>ul {
+    list-style: none;
+    width: 100%;
+    max-width: 520px;
+}
+
+body>ul li,
+.appt-list li {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.93rem;
+    border-left: 4px solid var(--primary);
+}
+
+li form[style*="inline"] {
+    display: inline-flex !important;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+li form[style*="inline"] button {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.82rem;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+li form[method="get"] button {
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+}
+
+li form[method="get"] button:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+li form[method="post"] button {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1.5px solid var(--danger);
+}
+
+li form[method="post"] button:hover {
+    background: var(--danger);
+    color: #fff;
+}
+
+li {
+    justify-content: space-between;
+}
+
+li>span,
+li>.appt-info {
+    flex: 1;
+}
+
+body>p {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+body>p a,
+body>ul>li>a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition);
+}
+
+body>p a:hover,
+body>ul>li>a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* Greeting on Login */
+body>p:first-of-type {
+    color: #e0e7ff;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+body>p:only-of-type,
+.empty-state {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    max-width: 520px;
+    width: 100%;
+}
+
+@media (max-width: 560px) {
+    body {
+        padding: 2rem 0.75rem 3rem;
+    }
+
+    form:not([style]) {
+        padding: 1.5rem 1.2rem;
+    }
+
+    li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
