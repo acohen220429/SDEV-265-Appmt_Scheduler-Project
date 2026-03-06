@@ -1,3 +1,5 @@
+"""Test suite for scheduler app behavior."""
+
 from django.test import TestCase
 
-# Create your tests here.
+# Add view/form/model tests here as coverage grows.

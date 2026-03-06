@@ -33,6 +33,7 @@
 
     <script>
         (function () {
+            // Form fields used to drive live availability updates.
             const dateInput = document.getElementById("id_date");
             const serviceSelect = document.getElementById("id_service");
             const startTimeSelect = document.getElementById("id_starttime");
@@ -45,6 +46,7 @@
             function setOptions(times, previousValue) {
                 startTimeSelect.innerHTML = "";
 
+                // Disable the selector when no slots are available.
                 if (!times.length) {
                     const option = document.createElement("option");
                     option.value = "";
@@ -79,6 +81,7 @@
                     return;
                 }
 
+                // Ask the backend for slots based on selected date/service.
                 const params = new URLSearchParams({
                     date: dateValue,
                     service: serviceValue

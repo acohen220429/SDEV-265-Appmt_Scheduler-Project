@@ -1,5 +1,8 @@
+"""App configuration for the scheduler Django app."""
+
 from django.apps import AppConfig
 
 
 class SchedulerConfig(AppConfig):
-    name = 'scheduler'
+    """Registers the scheduler app with Django."""
+    name = "scheduler"

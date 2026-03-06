@@ -1,14 +1,16 @@
+"""Views and scheduling helpers for the appointment booking workflow."""
+
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
-from datetime import datetime, timedelta, time
-from .forms import SimpleRegisterForm, AppointmentForm
+from django.shortcuts import redirect, render
+from datetime import datetime, time, timedelta
+from .forms import AppointmentForm, SimpleRegisterForm
 from .models import Appointment
 
-#This is our dictionary for service minutes
+# Service names mapped to their appointment durations.
 SERVICE_MINUTES = {
     "Extraction": 30,
     "Spray Tan": 45,
@@ -17,19 +19,21 @@ SERVICE_MINUTES = {
     "Acne Treatment": 45,
 }
 
-#This is our open and closing times for the business that we use to validate hours of operation
+# Business hours used by availability and validation checks.
 open_time = time(9, 0)
 close_time = time(17, 0)
 
-#Only open on weekdays, no weekends
+# Monday-Friday (Python weekday: Monday is 0).
 open_days = [0, 1, 2, 3, 4]
 
 
 def _format_time_label(time_value):
+    """Convert 24-hour HH:MM time to a user-facing 12-hour label."""
     return datetime.strptime(time_value, "%H:%M").strftime("%I:%M %p")
 
 
 def get_available_time_slots(date_value, service_name, exclude_appointment_id=None):
+    """Return non-overlapping start times for a given date and service."""
     service_minutes = SERVICE_MINUTES.get(service_name, 30)
     existing_appointments = Appointment.objects.filter(date=date_value)
 
@@ -64,6 +68,7 @@ def get_available_time_slots(date_value, service_name, exclude_appointment_id=No
 
 @login_required
 def available_times(request):
+    """AJAX endpoint that returns available appointment slots as JSON."""
     date_string = request.GET.get("date")
     service_name = request.GET.get("service")
     exclude_id = request.GET.get("exclude_id")
@@ -89,10 +94,12 @@ def available_times(request):
 
 
 def home(request):
+    """Render the landing page."""
     return render(request, "scheduler/home.html")
 
 
 def login_page(request):
+    """Authenticate an existing user and start a session."""
     if request.user.is_authenticated:
         return redirect("home")
 
@@ -111,6 +118,7 @@ def login_page(request):
 
 
 def register_page(request):
+    """Create a user account and sign the user in immediately."""
     if request.user.is_authenticated:
         return redirect("home")
 
@@ -129,67 +137,54 @@ def register_page(request):
 
 
 def logout_page(request):
+    """Log out the current user."""
     if request.method == "POST":
         logout(request)
         messages.success(request, "You have been logged out.")
     return redirect("home")
 
 
-#TEMPLATE shows appointments 
 @login_required
 def schedule_appointment(request):
-    appointments = Appointment.objects.filter(client=request.user).order_by('date', 'starttime')
+    """Show the current user's appointments in chronological order."""
+    appointments = Appointment.objects.filter(client=request.user).order_by("date", "starttime")
     return render(request, "scheduler/schedule_appointment.html", {"appointments": appointments})
+
 
 @login_required
 def create_appointment(request):
-    if request.method == 'POST':
+    """Create a new appointment after business-rule validation."""
+    if request.method == "POST":
         form = AppointmentForm(request.POST)
         if form.is_valid():
             appmt = form.save(commit=False)
             appmt.client = request.user
-            
-            #/ This code then calculates end time based on 
-            #/ the service duration from the minutes dictionary
 
-            service_minutes = SERVICE_MINUTES.get(appmt.service, 30)  # default to 30 minutes if service not found
-            #formatted as a single object for easier use
+            # Compute the end time from the selected service duration.
+            service_minutes = SERVICE_MINUTES.get(appmt.service, 30)
             start_datetime = datetime.combine(appmt.date, appmt.starttime)
-            #It then calculates how long the appointment will take
             appmt.endtime = (start_datetime + timedelta(minutes=service_minutes)).time()
 
-            #Below is valid days of operation checking
-            validDayTest = False
-            validHourTest = False
-        
+            # Appointments are only allowed during weekday business hours.
             if appmt.date.weekday() not in open_days:
                 messages.error(request, "Our business is only open Monday - Friday from 9:00 AM to 5:00 PM.")
-                validDayTest = True
                 return render(request, "scheduler/create_appointment.html", {"form": form})
 
-
-            #Below is valid hours checking
             if appmt.starttime < open_time or appmt.endtime >= close_time:
                 messages.error(request, "Appointments must be scheduled during business hours (9:00 AM to 5:00 PM).")
-                validHourTest = True
                 return render(request, "scheduler/create_appointment.html", {"form": form})
 
-
-            #Below will be the validation for appointment overlap
-            #and 24 hr advance booking
-
+            # Prevent overlap with any existing appointment on that date.
             overlapTest = False
-        
-
             exisiting_appointments = Appointment.objects.filter(date=appmt.date)
             for existing in exisiting_appointments:
-                if (appmt.starttime < existing.endtime and appmt.endtime > existing.starttime):
+                if appmt.starttime < existing.endtime and appmt.endtime > existing.starttime:
                     overlapTest = True
                     break
 
+            # Appointments must be booked at least 24 hours in advance.
+            advanceCheck = start_datetime < datetime.now() + timedelta(hours=24)
 
-            advanceCheck = start_datetime < datetime.now() + timedelta(hours = 24)
-    
             if overlapTest:
                 messages.error(request, "This appointment overlaps with an existing appointment. Please choose a different time.")
             elif advanceCheck:
@@ -205,9 +200,10 @@ def create_appointment(request):
 
     return render(request, "scheduler/create_appointment.html", {"form": form})
 
-#Editing an appointment
+
 @login_required
 def edit_appointment(request, appointment_id):
+    """Edit an existing appointment owned by the logged-in user."""
     try:
         appointment = Appointment.objects.get(id=appointment_id, client=request.user)
     except Appointment.DoesNotExist:
@@ -224,6 +220,7 @@ def edit_appointment(request, appointment_id):
             start_datetime = datetime.combine(appmt.date, appmt.starttime)
             appmt.endtime = (start_datetime + timedelta(minutes=service_minutes)).time()
 
+            # Re-run the same business rules used during creation.
             if appmt.date.weekday() not in open_days:
                 messages.error(request, "Our business is only open Monday - Friday from 9:00 AM to 5:00 PM.")
                 return render(request, "scheduler/edit_appointment.html", {"form": form, "appointment": appointment})
@@ -256,10 +253,11 @@ def edit_appointment(request, appointment_id):
 
     return render(request, "scheduler/edit_appointment.html", {"form": form, "appointment": appointment})
 
-#Deleting an appointment
+
 @login_required
 def delete_appointment(request, appointment_id):
-    if request.method == 'POST':
+    """Delete an appointment owned by the logged-in user."""
+    if request.method == "POST":
         try:
             appointment = Appointment.objects.get(id=appointment_id, client=request.user)
             appointment.delete()

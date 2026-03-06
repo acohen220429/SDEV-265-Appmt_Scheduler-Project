@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from scheduler import views
 
+# Public pages, auth routes, and appointment workflow endpoints.
 urlpatterns = [
     path('', views.home, name='home'),
     path('login/', views.login_page, name='login'),
